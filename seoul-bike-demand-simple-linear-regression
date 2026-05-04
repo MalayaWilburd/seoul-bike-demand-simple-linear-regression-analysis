@@ -1,0 +1,199 @@
+---
+title: "Simple Linear Regression Analysis"
+format: html
+author: Malaya Wilburd
+---
+
+# Purpose
+
+This analysis explores the relationship between **temperature (°C)** and **hourly bike rental demand** in Seoul using *simple linear regression*. The goal is to identify whether temperature is a *statistically significant* predictor of demand and to evaluate the strengths and limitations of a single-predictor model.
+
+# Data Pre-processing
+
+***Data Cleaning:***
+
+-   Manually converted predictors (column names) to snake case for improved readability, easier referencing, and standardization.
+
+```{r}
+
+SeoulBikes <- read.csv("SeoulBikeData.csv") #Importing dataset
+
+colnames(SeoulBikes)  #Displaying column names(predictors)
+```
+
+# Exploring the Dataset
+
+**Observations:**
+
+-   No missing values
+-   14 columns
+-   8760 observations (spans from *January 2017 to November 2018*)
+-   Rented Bike Count is recorded every hour of a single data, so there are 24 observations ranging from hour 0 to 23 for a given day in the dataset.
+
+***Data Types:***
+
+-   Contains mainly numerical values with date being categorical, and holiday, season, and functioning day being character types.
+
+```{r}
+
+str(SeoulBikes) #Displaying structure of dataset
+
+sapply(SeoulBikes, anyNA) #Checking for null values
+```
+
+# Choosing a Variable
+
+-   **Temperature** was chosen due to it having the *strongest linear correlation* to **Rented Bike Count** among the rest of the predictors.
+
+    -   Temperature has a *moderate, positive* linear relationship to Rented Bike Count.
+
+```{r}
+
+SeoulBikesNum <- SeoulBikes[sapply(SeoulBikes, is.numeric)]  #Converting to numeric
+
+cor_matrix <- cor(SeoulBikesNum) #Creating correlation matrix
+round(cor_matrix, 2)
+```
+
+# Visuals
+
+### Temperature
+
+-   Temperatures range from approximately -20 °C to 40 °C.
+
+    -   Most observations fall between 0 °C and 30 °C.
+
+-   The values seem to closely follow a *normal distribution.*
+
+```{r}
+
+# Creating histogram for Temperature
+hist(
+  SeoulBikes$temperature_c,
+  main = "Histogram of Temperature",
+  xlab = "Temperature (°C)",
+  col = "pink"
+  )
+```
+
+### Hourly Bike Rentals
+
+-   Distribution is *right-skewed*.
+
+    -   Most hours have "lower" rental counts, with fewer high-demand hours.
+
+```{r}
+
+# Creating histogram for Hourly Bike Rentals
+hist(
+  SeoulBikes$rented_bike_count,
+  main = "Histogram of Hourly Bike Rentals",
+  xlab = "Hourly Bike Rentals",
+  col = "light blue"
+  )
+```
+
+# Simple Linear Model
+
+**Estimated Regression Equation:**
+
+-   $\hat{y} = 329.9525 + 29.0811x$
+
+```{r}
+
+SeoulBikesModel <- lm(rented_bike_count ~ temperature_c, data=SeoulBikes)  #Fitting model
+
+summary(SeoulBikesModel)  #Getting summary stats of model
+```
+
+# Interpretation
+
+### Interpretation:
+
+-   Rented bike count is expected to increase by approximately 29 additional bikes per hour for every 1 °C increase in temperature.
+
+### Significant?
+
+#### *Hypothesis Test:*
+
+$H_0:\beta_1 = 0$
+
+$H_a: \beta_1 \ne 0$
+
+$a = 0.01$
+
+$p-value : 2.2 * 10^{-16}$
+
+-   At a *99%* confidence level $(\alpha = 0.01)$, we have enough statistical evidence $(p-value < a)$ to reject the null hypothesis and further conclude that temperature *is* a statistically significant predictor of hourly bike rentals.
+
+### R-Squared & F-Statistic
+
+$R^2 = 0.29$
+
+$F-Statistic = 3578$
+
+-   The model explains 29% of variance, suggesting that additional predictors are needed to better explain hourly bike rental demand. The f-statistic also shows that the model is highly significant.
+
+# Residual Analysis
+
+### Residual Plot of Bike Rentals vs Temperature
+
+-   Increase in spread at higher temperatures.
+
+    -   Greater variability in bike demand during warmer conditions.
+
+```{r}
+
+# Residual plot
+plot(SeoulBikesModel$fitted.values, SeoulBikesModel$residuals,
+     main = "Residual Plot",
+     xlab = "Fitted Values",
+     ylab = "Residuals",
+     pch = 16,
+     col = "gray70")
+abline(h = 0, col = "orange", lwd = 2)
+```
+
+# Confidence and Prediction Intervals
+
+-   The limitations of the sole predictor, temperature, start to show when looking at the confidence and prediction interval of our model. The confidence interval (green) captures the uncertainty around the estimated mean bike rental count at each temperature, while the prediction interval (red) reflects the range within which an individual hourly observation is expected to fall. The notably wide prediction interval highlights the considerable variability in the bike rentals that temperature alone cannot account for, reinforcing the need for additional predictors in future modeling.
+
+```{r}
+temp_range <- data.frame(temperature_c = seq(-20, 40, length.out = 100))
+
+ci <- predict(SeoulBikesModel, temp_range, interval = "confidence")
+pi <- predict(SeoulBikesModel, temp_range, interval = "prediction")
+
+plot(SeoulBikes$temperature_c, SeoulBikes$rented_bike_count,
+     main = "Bike Rentals vs Temperature",
+     xlab = "Temperature (°C)",
+     ylab = "Rented Bike Count",
+     pch = 16, col = "gray70")
+abline(SeoulBikesModel, col = "blue", lwd = 2)
+lines(temp_range$temperature_c, ci[,"lwr"], col = "darkgreen", lty = 2)
+lines(temp_range$temperature_c, ci[,"upr"], col = "darkgreen", lty = 2)
+lines(temp_range$temperature_c, pi[,"lwr"], col = "red", lty = 2)
+lines(temp_range$temperature_c, pi[,"upr"], col = "red", lty = 2)
+
+legend("topleft",
+       legend = c("Regression Line", "Confidence Interval", "Prediction Interval"),
+       col = c("blue", "darkgreen", "red"),
+       lty = c(1, 2, 2),
+       lwd = c(2, 1.5, 1.5),
+       bty = "n")
+```
+
+### Prediction at 22°C
+
+```{r}
+predict(SeoulBikesModel, data.frame(temperature_c = 22), interval = "confidence")
+predict(SeoulBikesModel, data.frame(temperature_c = 22), interval = "prediction")
+```
+
+-   At 22 °C, the model predicts \~970 rentals per hour, with a 95% confidence interval of (955.42, 984.06) for the true mean and a 95% prediction interval of (-95.74, 2035.22) for an individual observation.
+
+# Summary
+
+Using simple linear regression, we modeled the relationship between temperature and hourly bike rental demand across 8,760 observations in Seoul. The estimated regression equation $\hat{y} = 329.95 + 29.08x$, indicates that for every 1 °C increase in temperature, hourly bike rentals are expected to increase by \~29 bikes. At a 99% confidence level $(a = 0.01)$, temperature was found to be a statistically significant predictor $(p-value = 2.2 * 10^{-16})$, concluding rejection of the null hypothesis that $\beta_1 = 0$
+
+However, with an $R^2$ of 0.29, temperature alone explains only 29% of the variation in hourly rentals. At 22 °C, the model predicts \~970 rentals per hour, with a 95% confidence interval of (955.42, 984.06) for the true mean and a 95% prediction interval of (-95.74, 2035.22) for an individual observation. The wide prediction interval, combined with the heteroscedasticity observed in the residual plot, suggests that while temperature is a meaningful predictor, additional variables such as hour of day, season, and weather conditions would be needed to build a more reliable model.
