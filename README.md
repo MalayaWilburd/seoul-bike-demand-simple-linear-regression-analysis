@@ -52,5 +52,5 @@ The full rendered analysis is available on RPubs:
 [View Full Analysis](https://rpubs.com/mwilburd/seoul-bike-analysis)
 
 ## Files
-- `Seoul_Bike_Regression.qmd` — Quarto source document
-- `SeoulBikeData.csv` — Dataset
+- `seoul-bike-demand-linear-simple-regression.qmd` - Quarto source document
+- `SeoulBikeData.csv` - Dataset
