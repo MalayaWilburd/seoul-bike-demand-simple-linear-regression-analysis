@@ -1,4 +1,4 @@
-# Seoul Bike Sharing Demand — Simple Linear Regression Analysis
+# Seoul Bike Sharing Demand - Simple Linear Regression Analysis
 
 ## Overview
 This project applies simple linear regression to analyze the relationship 
@@ -20,7 +20,7 @@ stable bike availability throughout the city.
 - Seasonal indicators
 - Holiday and functioning day status
 
-**Source:** UCI Machine Learning Repository
+**Source:** Seoul Open Data Plaza (data.seoul.go.kr) & South Korea Public Holidays (publicholidays.go.kr)
 
 ## Methods
 - Exploratory Data Analysis (EDA)
@@ -38,7 +38,7 @@ stable bike availability throughout the city.
   29 additional bike rentals per hour
 - Temperature is a statistically significant predictor 
   (F = 3,578, p ≈ 0)
-- R² = 0.29 — temperature alone explains 29% of the variance, 
+- R² = 0.29; temperature alone explains 29% of the variance, 
   indicating additional predictors are needed for a more complete model
 - Residual plot revealed heteroscedasticity, further supporting the 
   need for a multi-variable approach
